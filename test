@@ -1,0 +1,25 @@
+class lstm_bottleneck(Layer):
+    def __init__(self, lstm_units, time_steps, **kwargs):
+        self.lstm_units = lstm_units
+        self.time_steps = time_steps
+        self.lstm_layer = LSTM(lstm_units, return_sequences=False)
+        self.repeat_layer = RepeatVector(time_steps)
+        super(lstm_bottleneck, self).__init__(**kwargs)
+    def call(self, inputs):
+        return self.repeat_layer(self.lstm_layer(inputs))
+    def compute_mask(self, inputs, mask=None):
+        return mask
+        
+        
+time_steps=3657
+n_features=6        
+input_layer = Input(shape=(time_steps, n_features))
+x = Masking(mask_value=0)(input_layer)
+x = LSTM(6, return_sequences=True)(x)
+x = lstm_bottleneck(lstm_units=6, time_steps=3657)(x)
+x = LSTM(6, return_sequences=True)(x)
+x = LSTM(6, return_sequences=True)(x)
+x = Dense(6)(x)
+lstm_ae = Model(inputs=input_layer, outputs=x)
+lstm_ae.compile(optimizer='adam', loss='mse')
+print(lstm_ae.summary())
